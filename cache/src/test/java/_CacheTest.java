@@ -1,6 +1,7 @@
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -11,11 +12,29 @@ import static org.junit.Assert.assertEquals;
 public class _CacheTest {
 
     @Test
-    public void PutGet() {
-        Cache cache = new Cache();
-        cache.put("item", "money");
-        String item = cache.get("item");
-        assertEquals("money", item);
+    public void CacheComputedResult() {
+        final Computable<String, String> duplicate
+                = new Computable<String, String>() {
+            @Override
+            public String compute(String input) {
+                return input + input;
+            }
+        };
+        Cache cache = new Cache(duplicate);
+        assertEquals("itemitem", cache.compute("item"));
+        assertEquals("moneymoney", cache.compute("money"));
+    }
+
+    @Test
+    public void OnlyComputeOnce() {
+        final Computable<String, String> duplicate = mock(Computable.class);
+        when(duplicate.compute("item")).thenReturn("itemitem");
+        Cache cache = new Cache(duplicate);
+        assertEquals("itemitem", cache.compute("item"));
+        assertEquals("itemitem", cache.compute("item"));
+        assertEquals("itemitem", cache.compute("item"));
+
+        verify(duplicate, only()).compute("item");
     }
 
 
